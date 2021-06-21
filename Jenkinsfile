@@ -104,27 +104,27 @@ pipeline {
                                     def user = jsonParse(di)
                                     
                                     String userName = " --username " + user.Username
-                                    String pwd = "--password Connect@12312"
-                                    
+                                    String pwd = "--password Connect@12312"                                    
                                     String firstName = user.IdentityInfo.FirstName
                                     String lastName = user.IdentityInfo.LastName
-                                    String email = user.IdentityInfo.Email
-                                    
-                                    String idInfo = " --identity-info " + "FirstName=" + firstName + ",LastName=" + lastName +",Email=" + email
-                                    
+                                    String email = user.IdentityInfo.Email                                    
+                                    String idInfo = " --identity-info " + "FirstName=" + firstName + ",LastName=" + lastName +",Email=" + email                                    
                                     String phoneType = user.PhoneConfig.PhoneType
                                     String autoAccept = user.PhoneConfig.AutoAccept
                                     String acw = user.PhoneConfig.AfterContactWorkTimeLimit
-                                    String dpn = user.PhoneConfig.DeskPhoneNumber
-                                    
-                                    String pc = " --phone-config " + "PhoneType=" + phoneType ",AutoAccept=" + autoAccept + ",AfterContactWorkTimeLimit=" acw + ",DeskPhoneNumber=" + dpn 
-                                    
-                                    String rpId = user.PhoneConfig.RoutingProfileId
-                                    def sp = user.PhoneConfig.SecurityProfileIds
-                                    
+                                    String dpn = user.PhoneConfig.DeskPhoneNumber                                    
+                                    String pc = " --phone-config " + "PhoneType=" + phoneType ",AutoAccept=" + autoAccept + ",AfterContactWorkTimeLimit=" acw + ",DeskPhoneNumber=" + dpn                                     
+                                    String rpId = getRPId(PRIMARYRPS, user.PhoneConfig.RoutingProfileId, TARGETRPS)                                    
+                                    String rp = "--routing-profile-id ${rpId}"                                    
+                                    String spIds = "--security-profile-ids " + getSPIds(PRIMARYSECPROS, user.PhoneConfig.SecurityProfileIds, TARGETSECPROS)
+                                    String hid = getHrRchyId(PRIMARYHRCHY, user.HierarchyGroupId, TARGETHRCHY)
+                                    String hgi = ""
+                                    if(hid.length() > 1 ) {
+                                        hgi = "--hierarchy-group-id " + hid
+                                    }
                                     di = null
                                     
-                                    def cq =  sh(script: "aws connect create-user --instance-id ${TRAGETINSTANCEARN} --name ${qcName} --description \"${qcDesc}\" --hours-of-operation-id ${hopId} ${maxContacts} ${quickConnectConfig} ${outBoundConfig} " , returnStdout: true).trim()
+                                    def cq =  sh(script: "aws connect create-user --instance-id ${TRAGETINSTANCEARN} ${userName} ${pwd} ${idInfo} ${spIds} ${rpId} ${hgi}" , returnStdout: true).trim()
                                     echo cq
                                }
                             }
@@ -134,7 +134,7 @@ pipeline {
             }
         } 
 
-         stage('queue sync complete') {
+         stage('user sync complete') {
             steps {
                 echo "completed sycnronizing both instances"                
                 withAWS(credentials: '71b568ab-3ca8-4178-b03f-c112f0fd5030', region: 'us-east-1') {   
@@ -169,74 +169,83 @@ def checkList(qcName, tl) {
     return qcFound
 }
 
-def getFlowId (primary, flowId, target) {
+def getRPId (primary, searchId, target) {
     def pl = jsonParse(primary)
     def tl = jsonParse(target)
     String fName = ""
     String rId = ""
-    println "Searching for flowId : $flowId"
-    for(int i = 0; i < pl.ContactFlowSummaryList.size(); i++){
-        def obj = pl.ContactFlowSummaryList[i]    
-        if (obj.Id.equals(flowId)) {
+    println "Searching for Id : $searchId"
+    for(int i = 0; i < pl.RoutingProfileSummaryList.size(); i++){
+        def obj = pl.RoutingProfileSummaryList[i]    
+        if (obj.Id.equals(searchId)) {
             fName = obj.Name
-            println "Found flow name : $fName"
+            println "Found Name : $fName"
             break
         }
     }
-    println "Searching for flow name : $fName"        
-    for(int i = 0; i < tl.ContactFlowSummaryList.size(); i++){
-        def obj = tl.ContactFlowSummaryList[i]    
+    println "Searching for name : $fName"        
+    for(int i = 0; i < tl.RoutingProfileSummaryList.size(); i++){
+        def obj = tl.RoutingProfileSummaryList[i]    
         if (obj.Name.equals(fName)) {
             rId = obj.Id
-            println "Found flow id : $rId"
+            println "Found matching id : $rId"
             break
         }
     }
     return rId
 }
 
-def getQuickConnectId (primary, name, target) {
-    def pl = jsonParse(primary)
-    def tl = jsonParse(target)
-    String fName = name
+def getSPIds (primary, searchIds, target) {
     String rId = ""
-    echo "Find for name : ${fName}"       
-    for(int i = 0; i < tl.QuickConnectSummaryList.size(); i++){
-        def obj = tl.QuickConnectSummaryList[i]    
-        if (obj.Name.equals(fName)) {
-            rId = obj.Id
-            println "Found id : $rId"
-            break
+    searchIds.each{ sId => 
+        def pl = jsonParse(primary)
+        def tl = jsonParse(target)
+        String fName = ""
+        println "Searching for Id : $sId"
+        for(int i = 0; i < pl.SecurityProfileSummaryList.size(); i++){
+            def obj = pl.SecurityProfileSummaryList[i]    
+            if (obj.Id.equals(sId)) {
+                fName = obj.Name
+                println "Found Name : $fName"
+                break
+            }
         }
-    }
+        println "Searching for name : $fName"        
+        for(int i = 0; i < tl.SecurityProfileSummaryList.size(); i++){
+            def obj = tl.SecurityProfileSummaryList[i]    
+            if (obj.Name.equals(fName)) {
+                rId = rId + " " + obj.Id
+                println "Found matching id : $rId"
+                break
+            }
+        }
+    };
+                  
     return rId
-    
 }
 
-def getHopId (primary, userId, target) {
+def getHrRchyId (primary, searchId, target) {
     def pl = jsonParse(primary)
     def tl = jsonParse(target)
     String fName = ""
     String rId = ""
-    println "Searching for userId : $userId"
-    for(int i = 0; i < pl.HoursOfOperationSummaryList.size(); i++){
-        def obj = pl.HoursOfOperationSummaryList[i]    
-        if (obj.Id.equals(userId)) {
+    println "Searching for Id : $searchId"
+    for(int i = 0; i < pl.UserHierarchyGroupSummaryList.size(); i++){
+        def obj = pl.UserHierarchyGroupSummaryList[i]    
+        if (obj.Id.equals(searchId)) {
             fName = obj.Name
-            println "Found name : $fName"
+            println "Found Name : $fName"
             break
         }
     }
-    println "Searching for Id for : $fName"        
-    for(int i = 0; i < tl.HoursOfOperationSummaryList.size(); i++){
-        def obj = tl.HoursOfOperationSummaryList[i]    
+    println "Searching for name : $fName"        
+    for(int i = 0; i < tl.UserHierarchyGroupSummaryList.size(); i++){
+        def obj = tl.UserHierarchyGroupSummaryList[i]    
         if (obj.Name.equals(fName)) {
             rId = obj.Id
-            println "Found Id : $rId"
+            println "Found matching id : $rId"
             break
         }
     }
     return rId
-    
 }
-
