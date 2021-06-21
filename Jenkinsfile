@@ -197,7 +197,7 @@ def getRPId (primary, searchId, target) {
 
 def getSPIds (primary, searchIds, target) {
     String rId = ""
-    searchIds.each{ sId => 
+    searchIds.each{ sId -> 
         def pl = jsonParse(primary)
         def tl = jsonParse(target)
         String fName = ""
