@@ -3,7 +3,7 @@ import groovy.json.JsonSlurper
 import groovy.json.JsonOutput; 
 
 def CONFIGDETAILS 
-String MISSINGUSERS = ""
+String MISSINGLIST = ""
 def INSTANCEARN = ""
 def TRAGETINSTANCEARN = ""
 String PRIMARYUSERS = ""
@@ -22,11 +22,11 @@ pipeline {
             steps {
                 script{
                    try{
-                      sh(script: "rm -r ac-queue-syncronization", returnStdout: true)    
+                      sh(script: "rm -r ac-user-syncronization", returnStdout: true)    
                    }catch (Exception e) {
                        echo 'Exception occurred: ' + e.toString()
                    }                   
-                   sh(script: "git clone https://github.com/ramprasadsv/ac-queue-syncronization.git", returnStdout: true)
+                   sh(script: "git clone https://github.com/ramprasadsv/ac-user-syncronization.git", returnStdout: true)
                    sh(script: "ls -ltr", returnStatus: true)
                    CONFIGDETAILS = sh(script: 'cat parameters.json', returnStdout: true).trim()
                    def config = jsonParse(CONFIGDETAILS)
@@ -66,32 +66,32 @@ pipeline {
             }
         }
         
-        stage('Find missing queues') {
+        stage('Find missing users') {
             steps {
                 script {
-                    echo "Find missing queues in the target instance"
-                    def pl = jsonParse(PRIMARYQUEUES)
-                    def tl = jsonParse(TARGETQUEUES)
-                    int listSize = pl.QueueSummaryList.size() 
+                    echo "Find missing users in the target instance"
+                    def pl = jsonParse(PRIMARYUSERS)
+                    def tl = jsonParse(TARGETUSERS)
+                    int listSize = pl.UserSummaryList.size() 
                     println "Primary list size $listSize"
                     for(int i = 0; i < listSize; i++){
-                        def obj = pl.QueueSummaryList[i]
-                        String qcName = obj.Name
+                        def obj = pl.UserSummaryList[i]
+                        String qcName = obj.Username
                         String qcId = obj.Id
                         boolean qcFound = checkList(qcName, tl)
                         if(qcFound == false) {
                             println "Missing Name : $qcName Id : $qcId"                                                              
-                            MISSINGQC = MISSINGQC.concat(qcId).concat(",")                                
+                            MISSINGLIST = MISSINGLIST.concat(qcId).concat(",")                                
                         }
                     }
                 }
-                echo "Missing list in the target instance -> ${MISSINGQC}"
+                echo "Missing list in the target instance -> ${MISSINGLIST}"
             }
         }
         
-        stage('Create the missing queues') {
+        stage('Create the missing users') {
             steps {
-                echo "Create the missing queues in the target instance "                
+                echo "Create the missing users in the target instance "                
                 withAWS(credentials: '71b568ab-3ca8-4178-b03f-c112f0fd5030', region: 'us-east-1') {   
                     script {
                         if(MISSINGQC.length() > 1 ){
@@ -99,17 +99,19 @@ pipeline {
                             for(int i = 0; i < qcList.size(); i++){
                                 String qcId = qcList[i]
                                 if(qcId.length() > 2){
-                                    def di =  sh(script: "aws connect describe-queue --instance-id ${INSTANCEARN} --queue-id ${qcId}", returnStdout: true).trim()
+                                    def di =  sh(script: "aws connect describe-user --instance-id ${INSTANCEARN} --user-id ${qcId}", returnStdout: true).trim()
                                     echo di
-                                    def dq =  sh(script: "aws connect list-queue-quick-connects --instance-id ${INSTANCEARN} --queue-id ${qcId}", returnStdout: true).trim()
-                                    echo dq
-                                    def qc = jsonParse(di)
-                                    def quickConnectList 
-                                    try {
-                                        quickConnectList = jsonParse(dq)
-                                    } catch (Exception e) {
-                                        echo "Exception occured while parsing QC " + e.toString()
-                                    }                                    
+                                    def user = jsonParse(di)
+                                    
+                                    String userName = user.Username
+                                    String firstName = user.IdentityInfo.FirstName
+                                    String lastName = user.IdentityInfo.LastName
+                                    String email = user.IdentityInfo.Email
+                                    
+                                    String phoneType = user.PhoneConfig.PhoneType
+                                    String autoAccept = user.PhoneConfig.AutoAccept
+                                    String acw = user.PhoneConfig.AfterContactWorkTimeLimit
+                                    String dpn = user.PhoneConfig.DeskPhoneNumber
                                     
                                     String targetQCList = ""
                                     String quickConnectConfig = ""
@@ -205,9 +207,9 @@ def toJSON(def json) {
 
 def checkList(qcName, tl) {
     boolean qcFound = false
-    for(int i = 0; i < tl.QueueSummaryList.size(); i++){
-        def obj2 = tl.QueueSummaryList[i]
-        String qcName2 = obj2.Name
+    for(int i = 0; i < tl.UserSummaryList.size(); i++){
+        def obj2 = tl.UserSummaryList[i]
+        String qcName2 = obj2.Username
         if(qcName2.equals(qcName)) {
             qcFound = true
             break
