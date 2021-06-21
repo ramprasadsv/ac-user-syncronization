@@ -114,7 +114,7 @@ pipeline {
                                     String acw = user.User.PhoneConfig.AfterContactWorkTimeLimit
                                     String dpn = user.User.PhoneConfig.DeskPhoneNumber                                    
                                     String pc = " --phone-config " + "PhoneType=" + phoneType + ",AutoAccept=" + autoAccept + ",AfterContactWorkTimeLimit=" + acw + ",DeskPhoneNumber=" + dpn                                     
-                                    String rpId = getRPId(PRIMARYRPS, user.User.PhoneConfig.RoutingProfileId, TARGETRPS)                                    
+                                    String rpId = getRPId(PRIMARYRPS, user.User.RoutingProfileId, TARGETRPS)                                    
                                     String rp = "--routing-profile-id ${rpId}"                                    
                                     String spIds = "--security-profile-ids " + getSPIds(PRIMARYSECPROS, user.User.PhoneConfig.SecurityProfileIds, TARGETSECPROS)
                                     String hid = getHrRchyId(PRIMARYHRCHY, user.User.HierarchyGroupId, TARGETHRCHY)
@@ -197,6 +197,7 @@ def getRPId (primary, searchId, target) {
 
 def getSPIds (primary, searchIds, target) {
     String rId = ""
+    echo searchIds
     searchIds.each{ sId -> 
         def pl = jsonParse(primary)
         def tl = jsonParse(target)
