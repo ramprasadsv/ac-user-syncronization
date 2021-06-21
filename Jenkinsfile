@@ -117,14 +117,14 @@ pipeline {
                                     String rpId = getRPId(PRIMARYRPS, user.User.RoutingProfileId, TARGETRPS)                                    
                                     String rp = "--routing-profile-id ${rpId}"                                    
                                     String spIds = "--security-profile-ids " + getSPIds(PRIMARYSECPROS, user.User.SecurityProfileIds, TARGETSECPROS)
-                                    String hid = getHrRchyId(PRIMARYHRCHY, user.User.HierarchyGroupId, TARGETHRCHY)
-                                    String hgi = ""
-                                    if(hid.length() > 1 ) {
-                                        hgi = "--hierarchy-group-id " + hid
+                                    String hid = ""
+                                    if(user.User.HierarchyGroupId != null) {
+                                         hid = "--hierarchy-group-id " + getHrRchyId(PRIMARYHRCHY, user.User.HierarchyGroupId, TARGETHRCHY)
                                     }
+                                    
                                     di = null
                                     
-                                    def cq =  sh(script: "aws connect create-user --instance-id ${TRAGETINSTANCEARN} ${userName} ${pwd} ${idInfo} ${spIds} ${rpId} ${hgi}" , returnStdout: true).trim()
+                                    def cq =  sh(script: "aws connect create-user --instance-id ${TRAGETINSTANCEARN} ${userName} ${pwd} ${idInfo} ${spIds} ${rpId} ${hid}" , returnStdout: true).trim()
                                     echo cq
                                }
                             }
