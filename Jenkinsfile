@@ -116,7 +116,7 @@ pipeline {
                                     String pc = " --phone-config " + "PhoneType=" + phoneType + ",AutoAccept=" + autoAccept + ",AfterContactWorkTimeLimit=" + acw + ",DeskPhoneNumber=" + dpn                                     
                                     String rpId = getRPId(PRIMARYRPS, user.User.RoutingProfileId, TARGETRPS)                                    
                                     String rp = "--routing-profile-id ${rpId}"                                    
-                                    String spIds = "--security-profile-ids " + getSPIds(PRIMARYSECPROS, user.User.PhoneConfig.SecurityProfileIds, TARGETSECPROS)
+                                    String spIds = "--security-profile-ids " + getSPIds(PRIMARYSECPROS, user.User.SecurityProfileIds, TARGETSECPROS)
                                     String hid = getHrRchyId(PRIMARYHRCHY, user.User.HierarchyGroupId, TARGETHRCHY)
                                     String hgi = ""
                                     if(hid.length() > 1 ) {
