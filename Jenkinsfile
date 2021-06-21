@@ -113,7 +113,7 @@ pipeline {
                                     String autoAccept = user.PhoneConfig.AutoAccept
                                     String acw = user.PhoneConfig.AfterContactWorkTimeLimit
                                     String dpn = user.PhoneConfig.DeskPhoneNumber                                    
-                                    String pc = " --phone-config " + "PhoneType=" + phoneType ",AutoAccept=" + autoAccept + ",AfterContactWorkTimeLimit=" acw + ",DeskPhoneNumber=" + dpn                                     
+                                    String pc = " --phone-config " + "PhoneType=" + phoneType + ",AutoAccept=" + autoAccept + ",AfterContactWorkTimeLimit=" + acw + ",DeskPhoneNumber=" + dpn                                     
                                     String rpId = getRPId(PRIMARYRPS, user.PhoneConfig.RoutingProfileId, TARGETRPS)                                    
                                     String rp = "--routing-profile-id ${rpId}"                                    
                                     String spIds = "--security-profile-ids " + getSPIds(PRIMARYSECPROS, user.PhoneConfig.SecurityProfileIds, TARGETSECPROS)
