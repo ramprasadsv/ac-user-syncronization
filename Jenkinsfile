@@ -103,21 +103,21 @@ pipeline {
                                     echo di
                                     def user = jsonParse(di)
                                     
-                                    String userName = " --username " + user.Username
+                                    String userName = " --username " + user.User.Username
                                     String pwd = "--password Connect@12312"                                    
-                                    String firstName = user.IdentityInfo.FirstName
-                                    String lastName = user.IdentityInfo.LastName
-                                    String email = user.IdentityInfo.Email                                    
+                                    String firstName = user.User.IdentityInfo.FirstName
+                                    String lastName = user.User.IdentityInfo.LastName
+                                    String email = user.User.IdentityInfo.Email                                    
                                     String idInfo = " --identity-info " + "FirstName=" + firstName + ",LastName=" + lastName +",Email=" + email                                    
-                                    String phoneType = user.PhoneConfig.PhoneType
-                                    String autoAccept = user.PhoneConfig.AutoAccept
-                                    String acw = user.PhoneConfig.AfterContactWorkTimeLimit
-                                    String dpn = user.PhoneConfig.DeskPhoneNumber                                    
+                                    String phoneType = user.User.PhoneConfig.PhoneType
+                                    String autoAccept = user.User.PhoneConfig.AutoAccept
+                                    String acw = user.User.PhoneConfig.AfterContactWorkTimeLimit
+                                    String dpn = user.User.PhoneConfig.DeskPhoneNumber                                    
                                     String pc = " --phone-config " + "PhoneType=" + phoneType + ",AutoAccept=" + autoAccept + ",AfterContactWorkTimeLimit=" + acw + ",DeskPhoneNumber=" + dpn                                     
-                                    String rpId = getRPId(PRIMARYRPS, user.PhoneConfig.RoutingProfileId, TARGETRPS)                                    
+                                    String rpId = getRPId(PRIMARYRPS, user.User.PhoneConfig.RoutingProfileId, TARGETRPS)                                    
                                     String rp = "--routing-profile-id ${rpId}"                                    
-                                    String spIds = "--security-profile-ids " + getSPIds(PRIMARYSECPROS, user.PhoneConfig.SecurityProfileIds, TARGETSECPROS)
-                                    String hid = getHrRchyId(PRIMARYHRCHY, user.HierarchyGroupId, TARGETHRCHY)
+                                    String spIds = "--security-profile-ids " + getSPIds(PRIMARYSECPROS, user.User.PhoneConfig.SecurityProfileIds, TARGETSECPROS)
+                                    String hid = getHrRchyId(PRIMARYHRCHY, user.User.HierarchyGroupId, TARGETHRCHY)
                                     String hgi = ""
                                     if(hid.length() > 1 ) {
                                         hgi = "--hierarchy-group-id " + hid
