@@ -103,77 +103,28 @@ pipeline {
                                     echo di
                                     def user = jsonParse(di)
                                     
-                                    String userName = user.Username
+                                    String userName = " --username " + user.Username
+                                    String pwd = "--password Connect@12312"
+                                    
                                     String firstName = user.IdentityInfo.FirstName
                                     String lastName = user.IdentityInfo.LastName
                                     String email = user.IdentityInfo.Email
+                                    
+                                    String idInfo = " --identity-info " + "FirstName=" + firstName + ",LastName=" + lastName +",Email=" + email
                                     
                                     String phoneType = user.PhoneConfig.PhoneType
                                     String autoAccept = user.PhoneConfig.AutoAccept
                                     String acw = user.PhoneConfig.AfterContactWorkTimeLimit
                                     String dpn = user.PhoneConfig.DeskPhoneNumber
                                     
-                                    String targetQCList = ""
-                                    String quickConnectConfig = ""
-                                    if(quickConnectList) {
-                                        echo "Collecting quick connect arns"
-                                        for(int j=0; j< quickConnectList.QuickConnectSummaryList.size(); j++) {
-                                            def obj = quickConnectList.QuickConnectSummaryList[j]
-                                            String newId = getQuickConnectId(PRIMARYQC, obj.Name, TARGETQC)
-                                            targetQCList = targetQCList.concat(" ").concat(newId)
-                                        }
-                                        echo "Here are collections for QC : ${targetQCList}"
-                                        if(targetQCList.length() > 2) {
-                                            quickConnectConfig = "--quick-connect ${targetQCList}"
-                                        }
-                                    }
-                                    echo "QC config -> ${quickConnectConfig}"
-                                    quickConnectList = null
+                                    String pc = " --phone-config " + "PhoneType=" + phoneType ",AutoAccept=" + autoAccept + ",AfterContactWorkTimeLimit=" acw + ",DeskPhoneNumber=" + dpn 
                                     
-                                    String qcName = qc.Queue.Name
-                                    String qcDesc = qc.Queue.Description
-                                    def ouboundFlowId 
-                                    def qcCallerName
-                                    if(qc.Queue.OutboundCallerConfig) {
-                                        if(qc.Queue.OutboundCallerConfig.OutboundFlowId) {
-                                            ouboundFlowId = getFlowId (PRIMARYCFS, qc.Queue.OutboundCallerConfig.OutboundFlowId, TARGETCFS)  
-                                        }
-                                        if(qc.Queue.OutboundCallerConfig.OutboundCallerIdName ) {
-                                            qcCallerName = qc.Queue.OutboundCallerConfig.OutboundCallerIdName 
-                                        }                                                                      
-                                    }
-
-                                    String hopId
-                                    if(qc.Queue.HoursOfOperationId) {
-                                        hopId = getHopId (PRIMARYHOP, qc.Queue.HoursOfOperationId, TARGETHOP)                                        
-                                    }
-                                    String maxContacts = ""
-                                    if(qc.Queue.MaxContacts ) {
-                                        maxContacts = " --max-contacts " + qc.Queue.MaxContacts 
-                                    }
-                                    String status = qc.Queue.Status 
-                                    qc = null
+                                    String rpId = user.PhoneConfig.RoutingProfileId
+                                    def sp = user.PhoneConfig.SecurityProfileIds
                                     
-                                    String outBoundConfig = "--outbound-caller-config \'"
-                                    boolean nameEnabled = false
-                                    boolean obConfigEnabled = false
-                                    if(qcCallerName) {
-                                        outBoundConfig = outBoundConfig.concat("OutboundCallerIdName=").concat(qcCallerName)
-                                        nameEnabled = true
-                                        obConfigEnabled = true
-                                    }
-                                    if(ouboundFlowId) {
-                                        obConfigEnabled = true
-                                        if(nameEnabled) {
-                                            outBoundConfig = outBoundConfig.concat(",OutboundFlowId=").concat(ouboundFlowId)
-                                        } else {
-                                            outBoundConfig = outBoundConfig.concat("OutboundFlowId=").concat(ouboundFlowId)
-                                        }
-                                    }
-                                    if(obConfigEnabled) {
-                                        outBoundConfig = outBoundConfig.concat("\'")
-                                    }
-                                    def cq =  sh(script: "aws connect create-queue --instance-id ${TRAGETINSTANCEARN} --name ${qcName} --description \"${qcDesc}\" --hours-of-operation-id ${hopId} ${maxContacts} ${quickConnectConfig} ${outBoundConfig} " , returnStdout: true).trim()
+                                    di = null
+                                    
+                                    def cq =  sh(script: "aws connect create-user --instance-id ${TRAGETINSTANCEARN} --name ${qcName} --description \"${qcDesc}\" --hours-of-operation-id ${hopId} ${maxContacts} ${quickConnectConfig} ${outBoundConfig} " , returnStdout: true).trim()
                                     echo cq
                                }
                             }
