@@ -114,8 +114,7 @@ pipeline {
                                     String acw = user.User.PhoneConfig.AfterContactWorkTimeLimit
                                     String dpn = user.User.PhoneConfig.DeskPhoneNumber                                    
                                     String pc = " --phone-config " + "PhoneType=" + phoneType + ",AutoAccept=" + autoAccept + ",AfterContactWorkTimeLimit=" + acw + ",DeskPhoneNumber=" + dpn                                     
-                                    String rpId = getRPId(PRIMARYRPS, user.User.RoutingProfileId, TARGETRPS)                                    
-                                    String rp = "--routing-profile-id ${rpId}"                                    
+                                    String rpId = "--routing-profile-id " + getRPId(PRIMARYRPS, user.User.RoutingProfileId, TARGETRPS)                                    
                                     String spIds = "--security-profile-ids " + getSPIds(PRIMARYSECPROS, user.User.SecurityProfileIds, TARGETSECPROS)
                                     String hid = ""
                                     if(user.User.HierarchyGroupId != null) {
@@ -124,7 +123,7 @@ pipeline {
                                     
                                     user = null
                                     
-                                    def cq =  sh(script: "aws connect create-user --instance-id ${TRAGETINSTANCEARN} ${userName} ${pwd} ${idInfo} ${spIds} ${rpId} ${hid}" , returnStdout: true).trim()
+                                    def cq =  sh(script: "aws connect create-user ${userName} ${pwd} ${idInfo} ${pc} ${spIds} ${rpId} ${hid} --instance-id ${TRAGETINSTANCEARN} " , returnStdout: true).trim()
                                     echo cq
                                }
                             }
