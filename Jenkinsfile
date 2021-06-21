@@ -94,8 +94,8 @@ pipeline {
                 echo "Create the missing users in the target instance "                
                 withAWS(credentials: '71b568ab-3ca8-4178-b03f-c112f0fd5030', region: 'us-east-1') {   
                     script {
-                        if(MISSINGQC.length() > 1 ){
-                            def qcList = MISSINGQC.split(",")
+                        if(MISSINGLIST.length() > 1 ){
+                            def qcList = MISSINGLIST.split(",")
                             for(int i = 0; i < qcList.size(); i++){
                                 String qcId = qcList[i]
                                 if(qcId.length() > 2){
