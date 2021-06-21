@@ -122,7 +122,7 @@ pipeline {
                                          hid = "--hierarchy-group-id " + getHrRchyId(PRIMARYHRCHY, user.User.HierarchyGroupId, TARGETHRCHY)
                                     }
                                     
-                                    di = null
+                                    user = null
                                     
                                     def cq =  sh(script: "aws connect create-user --instance-id ${TRAGETINSTANCEARN} ${userName} ${pwd} ${idInfo} ${spIds} ${rpId} ${hid}" , returnStdout: true).trim()
                                     echo cq
